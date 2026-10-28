@@ -1,0 +1,195 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ article.title }} - 知识分享平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <!-- Article Header -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">首页</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('article.list_articles') }}">文章</a></li>
+                <li class="breadcrumb-item active">{{ article.category.name if article.category else '未分类' }}</li>
+            </ol>
+        </nav>
+
+        <article class="bg-white p-5 rounded shadow-sm border mb-4">
+            <header class="mb-4 text-center">
+                <h1 class="display-4 fw-bold mb-3">{{ article.title }}</h1>
+                <div class="d-flex justify-content-center align-items-center text-muted gap-3">
+                    <span><i class="bi bi-person"></i> {{ article.author.nickname or article.author.username }}</span>
+                    <span><i class="bi bi-calendar"></i> {{ article.created_at.strftime('%Y-%m-%d') }}</span>
+                    <span><i class="bi bi-eye"></i> {{ article.view_count }} 次阅读</span>
+                </div>
+                
+                {% if article.tags %}
+                <div class="mt-3">
+                    {% for tag in article.tags %}
+                    <span class="badge rounded-pill bg-light text-primary border me-1">#{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </header>
+
+            {% if article.cover_image %}
+            <div class="text-center mb-5">
+                <img src="{{ article.cover_image }}" class="img-fluid rounded shadow-sm" alt="{{ article.title }}" style="max-height: 500px; width: 100%; object-fit: cover;">
+            </div>
+            {% endif %}
+
+            <div id="article-body" class="article-content fs-5 lh-lg"></div>
+            <textarea id="raw-content" style="display:none;">{{ article.content }}</textarea>
+            
+            <hr class="my-5">
+            
+            <!-- Actions -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <button onclick="handleInteract({{ article.id }}, 'like')" class="btn btn-outline-primary"><i class="bi bi-hand-thumbs-up"></i> 点赞 ({{ article.like_count }})</button>
+                    <button onclick="handleInteract({{ article.id }}, 'collect')" class="btn btn-outline-warning"><i class="bi bi-star"></i> 收藏 ({{ article.collect_count }})</button>
+                </div>
+                
+                {% if current_user.is_authenticated and (current_user.id == article.author_id or current_user.role == 'admin') %}
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('article.edit', article_id=article.id) }}" class="btn btn-outline-secondary">编辑</a>
+                    <button onclick="deleteArticle({{ article.id }})" class="btn btn-outline-danger">删除</button>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <!-- Comments Section -->
+        <div class="bg-white p-4 rounded shadow-sm border" id="comment-section">
+            <h4 class="mb-4">评论互动 ({{ comments|length }})</h4>
+            
+            {% if current_user.is_authenticated %}
+            <div class="mb-4">
+                <textarea class="form-control mb-2" id="comment-input" rows="3" placeholder="写下你的看法..."></textarea>
+                <div class="text-end">
+                    <button class="btn btn-primary" onclick="submitComment({{ article.id }})">发表评论</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-light border text-center">
+                请先 <a href="{{ url_for('auth.login') }}">登录</a> 后发表评论
+            </div>
+            {% endif %}
+            
+            <div id="comment-list">
+                {% if not comments %}
+                <div class="text-center py-4 text-muted no-comments">
+                    <p>暂无评论，快来抢沙发吧！</p>
+                </div>
+                {% else %}
+                    {% for comment in comments %}
+                    <div class="d-flex mb-4 border-bottom pb-3">
+                        <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; flex-shrink: 0;">
+                            {{ (comment.user.nickname or comment.user.username)[0].upper() }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1 fw-bold">{{ comment.user.nickname or comment.user.username }}</h6>
+                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-0 text-secondary">{{ comment.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rawContent = document.getElementById('raw-content').value;
+    document.getElementById('article-body').innerHTML = marked.parse(rawContent);
+});
+
+function deleteArticle(id) {
+    if(confirm('确定要删除这篇文章吗？')) {
+        fetch(`/article/delete/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => res.json()).then(data => {
+            if(data.code === 200) {
+                alert('已删除');
+                window.location.href = "{{ url_for('article.list_articles') }}";
+            } else {
+                alert(data.msg);
+            }
+        });
+    }
+}
+
+function submitComment(articleId) {
+    const input = document.getElementById('comment-input');
+    const content = input.value.trim();
+    
+    if(!content) {
+        alert('请输入评论内容');
+        return;
+    }
+    
+    fetch(`/article/comment/${articleId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.code === 200) {
+            const list = document.getElementById('comment-list');
+            const noComments = list.querySelector('.no-comments');
+            if(noComments) noComments.remove();
+            
+            const commentHtml = `
+                <div class="d-flex mb-4 border-bottom pb-3 fade-in">
+                    <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; flex-shrink: 0;">
+                        ${data.comment.username[0].toUpperCase()}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1 fw-bold">${data.comment.username}</h6>
+                            <small class="text-muted">${data.comment.created_at}</small>
+                        </div>
+                        <p class="mb-0 text-secondary">${data.comment.content}</p>
+                    </div>
+                </div>
+            `;
+            list.insertAdjacentHTML('afterbegin', commentHtml);
+            input.value = '';
+            
+            const title = document.querySelector('#comment-section h4');
+            const currentCount = parseInt(title.innerText.match(/\d+/)[0]) + 1;
+            title.innerText = `评论互动 (${currentCount})`;
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+
+function handleInteract(articleId, type) {
+    fetch(`/article/interact/${articleId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: type })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.code === 200) {
+            alert(data.msg);
+            location.reload();
+        } else if(data.code === 201) {
+            alert(data.msg);
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+</script>
+{% endblock %}

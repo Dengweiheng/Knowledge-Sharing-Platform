@@ -1,0 +1,69 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">评论管理</h1>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">评论内容</th>
+                        <th>所属文章</th>
+                        <th>评论用户</th>
+                        <th>评论时间</th>
+                        <th class="text-end pe-4">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comment in comments %}
+                    <tr id="comment-row-{{ comment.id }}">
+                        <td class="ps-4">
+                            <div class="text-truncate" style="max-width: 300px;" title="{{ comment.content }}">
+                                {{ comment.content }}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('article.detail', article_id=comment.article.id) }}" class="text-decoration-none">
+                                {{ comment.article.title }}
+                            </a>
+                        </td>
+                        <td>{{ comment.user.nickname or comment.user.username }}</td>
+                        <td class="text-muted small">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteComment({{ comment.id }})">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteComment(commentId) {
+    if (confirm('确认要删除这条评论吗？')) {
+        fetch(`/admin/comment/delete/${commentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 200) {
+                document.getElementById(`comment-row-${commentId}`).remove();
+            } else {
+                alert(data.msg);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

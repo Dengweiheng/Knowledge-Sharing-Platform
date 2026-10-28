@@ -1,0 +1,61 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}管理员后台 - 知识分享平台{% endblock %}
+
+{% block head %}
+<style>
+    .admin-sidebar {
+        min-height: calc(100vh - 56px);
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+    }
+    .nav-link.active {
+        background-color: #0d6efd;
+        color: white !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 d-md-block admin-sidebar collapse mb-4">
+        <div class="position-sticky pt-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.index' else 'text-dark' }}" href="{{ url_for('admin.index') }}">
+                        <i class="bi bi-speedometer2 me-2"></i> 数据统计
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.users' else 'text-dark' }}" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people me-2"></i> 用户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.articles' else 'text-dark' }}" href="{{ url_for('admin.articles') }}">
+                        <i class="bi bi-file-earmark-text me-2"></i> 文章管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin.comments' else 'text-dark' }}" href="{{ url_for('admin.comments') }}">
+                        <i class="bi bi-chat-left-dots me-2"></i> 评论管理
+                    </a>
+                </li>
+
+                <li class="nav-item mt-4">
+                    <hr>
+                    <a class="nav-link text-primary" href="{{ url_for('index') }}">
+                        <i class="bi bi-house me-2"></i> 返回前台
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Admin Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        {% block admin_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

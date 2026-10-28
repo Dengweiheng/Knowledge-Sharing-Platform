@@ -1,0 +1,68 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}猜你喜欢 - 知识分享平台{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-md-8">
+        <h2 class="display-5 fw-bold mb-2">猜你喜欢</h2>
+        <p class="text-muted lead">基于您的阅读兴趣和行为数据，为您推荐以下精彩内容。</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="badge bg-primary rounded-pill px-3 py-2 fs-6">
+            <i class="bi bi-robot me-1"></i> AI 智能算法生成
+        </div>
+    </div>
+</div>
+
+{% if articles %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for article in articles %}
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+            <div class="position-relative">
+                {% if article.cover_image %}
+                <img src="{{ article.cover_image }}" class="card-img-top" alt="{{ article.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill">
+                    {{ article.category.name if article.category else '未分类' }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title fw-bold">
+                    <a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark stretched-link">
+                        {{ article.title }}
+                    </a>
+                </h5>
+                <p class="card-text text-muted small mb-4">
+                    {{ article.summary or article.content[:100] }}...
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ article.author.avatar }}" class="rounded-circle me-2" width="24" height="24">
+                        <span class="small text-muted">{{ article.author.nickname or article.author.username }}</span>
+                    </div>
+                    <div class="small text-muted">
+                        <i class="bi bi-eye me-1"></i> {{ article.view_count }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-search text-light" style="font-size: 5rem;"></i>
+    </div>
+    <h4>暂无推荐内容</h4>
+    <p class="text-muted">多去读几篇文章，算法会更懂你！</p>
+    <a href="{{ url_for('article.list_articles') }}" class="btn btn-primary rounded-pill px-4 mt-3">去浏览文章</a>
+</div>
+{% endif %}
+{% endblock %}

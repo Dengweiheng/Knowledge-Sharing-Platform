@@ -1,0 +1,226 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">数据统计概览</h1>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-primary-subtle text-primary p-3 rounded">
+                        <i class="bi bi-people fs-3"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-subtitle mb-1 text-muted">总用户数</h6>
+                        <h3 class="card-title mb-0">{{ user_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-success-subtle text-success p-3 rounded">
+                        <i class="bi bi-file-earmark-text fs-3"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-subtitle mb-1 text-muted">总文章数</h6>
+                        <h3 class="card-title mb-0">{{ article_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-warning-subtle text-warning p-3 rounded">
+                        <i class="bi bi-chat-dots fs-3"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-subtitle mb-1 text-muted">总评论数</h6>
+                        <h3 class="card-title mb-0">{{ comment_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-info-subtle text-info p-3 rounded">
+                        <i class="bi bi-eye fs-3"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-subtitle mb-1 text-muted">总浏览量</h6>
+                        <h3 class="card-title mb-0">{{ total_views }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ECharts Row -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0">文章分类分布</h5>
+            </div>
+            <div class="card-body">
+                <div id="categoryChart" style="height: 350px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0">近期互动趋势</h5>
+            </div>
+            <div class="card-body">
+                <div id="trendChart" style="height: 350px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    <!-- Recent Articles -->
+    <div class="col-lg-7 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0">最近发布的文章</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>标题</th>
+                            <th>作者</th>
+                            <th>发布日期</th>
+                            <th>浏览量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for article in recent_articles %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark fw-medium">
+                                    {{ article.title }}
+                                </a>
+                            </td>
+                            <td>{{ article.author.nickname or article.author.username }}</td>
+                            <td class="text-muted">{{ article.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ article.view_count }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white text-center py-3">
+                <a href="{{ url_for('admin.articles') }}" class="btn btn-sm btn-outline-primary">查看全部文章</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="col-lg-5 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0">新注册用户</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for user in recent_users %}
+                <div class="list-group-item d-flex align-items-center py-3">
+                    <img src="{{ user.avatar or '/static/images/default_avatar.png' }}" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0">{{ user.nickname or user.username }}</h6>
+                        <small class="text-muted">{{ user.email or '未设置邮箱' }}</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">{{ user.created_at.strftime('%m-%d %H:%M') }}</small>
+                        <span class="badge {{ 'bg-danger' if user.role == 'admin' else 'bg-secondary' }}">{{ '管理员' if user.role == 'admin' else '普通用户' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-white text-center py-3">
+                <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-primary">管理用户</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Category Chart
+        var catChart = echarts.init(document.getElementById('categoryChart'));
+        var catOption = {
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            legend: { bottom: '5%', left: 'center' },
+            series: [{
+                name: '分类',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                label: { show: false, position: 'center' },
+                emphasis: { label: { show: true, fontSize: '20', fontWeight: 'bold' } },
+                labelLine: { show: false },
+                data: [
+                    {% for name, count in zip(cat_names, cat_counts) %}
+                    { value: {{ count }}, name: '{{ name }}' },
+                    {% endfor %}
+                ]
+            }]
+        };
+        catChart.setOption(catOption);
+
+        // 2. Trend Chart
+        var trendChart = echarts.init(document.getElementById('trendChart'));
+        var trendOption = {
+            tooltip: { trigger: 'axis' },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: [{% for d in trend_data %}'{{ d.date }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+            },
+            yAxis: { type: 'value' },
+            series: [{
+                data: [{% for d in trend_data %}{{ d.count }}{% if not loop.last %}, {% endif %}{% endfor %}] ,
+                type: 'line',
+                smooth: true,
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgb(13, 110, 253)' },
+                        { offset: 1, color: 'rgb(255, 255, 255)' }
+                    ])
+                },
+                lineStyle: { width: 3, color: '#0d6efd' },
+                itemStyle: { color: '#0d6efd' }
+            }]
+        };
+        trendChart.setOption(trendOption);
+
+        // Resize charts on window resize
+        window.addEventListener('resize', function() {
+            catChart.resize();
+            trendChart.resize();
+        });
+    });
+</script>
+{% endblock %}
+

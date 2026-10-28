@@ -1,0 +1,97 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}首页 - 知识分享平台{% endblock %}
+
+{% block content %}
+<div id="heroCarousel" class="carousel slide custom-carousel mb-5" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active carousel-gradient-1">
+            <div class="carousel-caption">
+                <h2 class="display-4 fw-bold">分享知识，启发未来</h2>
+                <p class="lead">这里是一个专注于深度交流与个性化推荐的文章分享平台。加入我们，探索更多你感兴趣的领域。</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5 shadow-sm rounded-pill fw-bold">立即加入</a>
+                {% else %}
+                <a href="{{ url_for('article.publish') }}" class="btn btn-light btn-lg px-5 shadow-sm rounded-pill fw-bold">发布新文章</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="carousel-item carousel-gradient-2">
+            <div class="carousel-caption">
+                <h2 class="display-4 fw-bold">探索多元视角</h2>
+                <p class="lead">汇聚各行各业的精华内容，从前沿技术到生活感悟，每一次阅读都是一次思想的碰撞。</p>
+                <a href="{{ url_for('article.list_articles') }}" class="btn btn-light btn-lg px-5 shadow-sm rounded-pill fw-bold">开始浏览</a>
+            </div>
+        </div>
+        <div class="carousel-item carousel-gradient-3">
+            <div class="carousel-caption">
+                <h2 class="display-4 fw-bold">智能精选推荐</h2>
+                <p class="lead">根据你的兴趣爱好，实时推送最适合你的优质好文。你的每次阅读，都让系统更懂你。</p>
+                <a href="{{ url_for('article.list_articles') }}" class="btn btn-light btn-lg px-5 shadow-sm rounded-pill fw-bold">查看我的专属推荐</a>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+
+        <h3 class="mt-5 mb-4">
+            {{ '猜你喜欢' if current_user.is_authenticated else '热门文章' }}
+        </h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for article in recommendations %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+                    {% if article.cover_image %}
+                    <img src="{{ article.cover_image }}" class="card-img-top" alt="{{ article.title }}" style="height: 160px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <span class="badge bg-light text-primary mb-2">{{ article.category.name if article.category else '未分类' }}</span>
+                        <h5 class="card-title text-truncate">
+                            <a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark stretched-link">
+                                {{ article.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted small text-truncate-2">
+                            {{ article.summary or article.content[:80] }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0">文章分类</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('article.list_articles') }}" class="list-group-item list-group-item-action">全部文章</a>
+                {% for cat in categories %}
+                <a href="{{ url_for('article.list_articles', category_id=cat.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ cat.name }}
+                    <span class="badge bg-light text-muted rounded-pill">{{ cat.articles|length }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

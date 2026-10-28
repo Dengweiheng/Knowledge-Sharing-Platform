@@ -1,0 +1,315 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}个人中心 - 知识分享平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="row g-0">
+                <!-- Sidebar Navigation -->
+                <div class="col-md-3 bg-light border-end">
+                    <div class="p-4 text-center">
+                        <div class="position-relative d-inline-block mb-3">
+                            <img src="{{ current_user.avatar }}" class="rounded-circle border border-4 border-white shadow-sm" alt="Avatar" style="width: 100px; height: 100px; object-fit: cover;">
+                            <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#uploadAvatarModal">
+                                <i class="bi bi-camera"></i>
+                            </button>
+                        </div>
+                        <h5 class="mb-1">{{ current_user.nickname or current_user.username }}</h5>
+                        <p class="text-muted small">@{{ current_user.username }}</p>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#info" class="list-group-item list-group-item-action border-0 py-3 px-4 active" data-bs-toggle="list">
+                            <i class="bi bi-person me-2"></i> 基本信息
+                        </a>
+                        <a href="#password" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="list">
+                            <i class="bi bi-shield-lock me-2"></i> 修改密码
+                        </a>
+                        <a href="#likes" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="list">
+                            <i class="bi bi-heart me-2"></i> 我的点赞
+                        </a>
+                        <a href="#collections" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="list">
+                            <i class="bi bi-star me-2"></i> 我的收藏
+                        </a>
+                        <a href="#comments" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="list">
+                            <i class="bi bi-chat-dots me-2"></i> 我的评论
+                        </a>
+
+                        <a href="#articles" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="list">
+                            <i class="bi bi-journal-text me-2"></i> 我的文章
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="col-md-9">
+                    <div class="card-body p-5">
+                        <div class="tab-content">
+                            <!-- Basic Info Tab -->
+                            <div class="tab-pane fade show active" id="info">
+                                <h4 class="mb-4">基本信息</h4>
+                                <form action="{{ url_for('user.profile') }}" method="POST">
+                                    <div class="mb-3">
+                                        <label class="form-label">用户名</label>
+                                        <input type="text" class="form-control bg-light" value="{{ current_user.username }}" readonly disabled>
+                                        <div class="form-text">用户名不可修改</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="nickname">昵称</label>
+                                        <input type="text" class="form-control" name="nickname" id="nickname" value="{{ current_user.nickname or '' }}" placeholder="设置一个好听的名字">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label" for="email">邮箱地址</label>
+                                        <input type="email" class="form-control" name="email" id="email" value="{{ current_user.email or '' }}" placeholder="yourname@example.com">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary px-4">保存修改</button>
+                                </form>
+                            </div>
+
+                            <!-- Password Tab -->
+                            <div class="tab-pane fade" id="password">
+                                <h4 class="mb-4">修改密码</h4>
+                                <form action="{{ url_for('user.change_password') }}" method="POST">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="old_password">原密码</label>
+                                        <input type="password" class="form-control" name="old_password" id="old_password" required>
+                                    </div>
+                                    <hr class="my-4">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="new_password">新密码</label>
+                                        <input type="password" class="form-control" name="new_password" id="new_password" required minlength="6">
+                                        <div class="form-text">密码至少包含 6 个字符</div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label" for="confirm_password">确认新密码</label>
+                                        <input type="password" class="form-control" name="confirm_password" id="confirm_password" required minlength="6">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary px-4">更新密码</button>
+                                </form>
+                            </div>
+
+                            <!-- Likes Tab -->
+                            <div class="tab-pane fade" id="likes">
+                                <h4 class="mb-4">我的点赞</h4>
+                                <div class="row row-cols-1 g-3">
+                                    {% if liked_articles %}
+                                        {% for article in liked_articles %}
+                                        <div class="col">
+                                            <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+                                                <div class="card-body d-flex align-items-center">
+                                                    {% if article.cover_image %}
+                                                    <img src="{{ article.cover_image }}" class="rounded me-3" style="width: 80px; height: 60px; object-fit: cover;">
+                                                    {% endif %}
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1"><a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark">{{ article.title }}</a></h6>
+                                                        <div class="text-muted small">
+                                                            <span><i class="bi bi-person"></i> {{ article.author.nickname or article.author.username }}</span>
+                                                            <span class="ms-3"><i class="bi bi-calendar"></i> {{ article.created_at.strftime('%Y-%m-%d') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <a href="{{ url_for('article.detail', article_id=article.id) }}" class="btn btn-outline-primary btn-sm rounded-pill">阅读</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-heart text-light" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-3">还没有点赞过文章</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Collections Tab -->
+                            <div class="tab-pane fade" id="collections">
+                                <h4 class="mb-4">我的收藏</h4>
+                                <div class="row row-cols-1 g-3">
+                                    {% if collected_articles %}
+                                        {% for article in collected_articles %}
+                                        <div class="col">
+                                            <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+                                                <div class="card-body d-flex align-items-center">
+                                                    {% if article.cover_image %}
+                                                    <img src="{{ article.cover_image }}" class="rounded me-3" style="width: 80px; height: 60px; object-fit: cover;">
+                                                    {% endif %}
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1"><a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark">{{ article.title }}</a></h6>
+                                                        <div class="text-muted small">
+                                                            <span><i class="bi bi-person"></i> {{ article.author.nickname or article.author.username }}</span>
+                                                            <span class="ms-3"><i class="bi bi-calendar"></i> {{ article.created_at.strftime('%Y-%m-%d') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <a href="{{ url_for('article.detail', article_id=article.id) }}" class="btn btn-outline-primary btn-sm rounded-pill">阅读</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-star text-light" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-3">还没有收藏过文章</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Comments Tab -->
+                            <div class="tab-pane fade" id="comments">
+                                <h4 class="mb-4">我的评论</h4>
+                                <div class="list-group list-group-flush">
+                                    {% if comments %}
+                                        {% for comment in comments %}
+                                        <div class="list-group-item border-0 px-0 mb-4 pb-4 border-bottom">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <h6 class="mb-0">
+                                                    评论文章：<a href="{{ url_for('article.detail', article_id=comment.article.id) }}" class="text-primary text-decoration-none">{{ comment.article.title }}</a>
+                                                </h6>
+                                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                            </div>
+                                            <div class="bg-light p-3 rounded">
+                                                {{ comment.content }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-chat-dots text-light" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-3">还没有发表过评论</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- Articles Management Tab -->
+
+                            <div class="tab-pane fade" id="articles">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h4 class="mb-0">我的文章</h4>
+                                    <a href="{{ url_for('article.publish') }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                        <i class="bi bi-plus-lg me-1"></i> 发布新文章
+                                    </a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>标题</th>
+                                                <th>发布日期</th>
+                                                <th>数据</th>
+                                                <th class="text-end pe-3">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if current_user.articles %}
+                                                {% for article in current_user.articles %}
+                                                <tr id="article-row-{{ article.id }}">
+                                                    <td>
+                                                        <a href="{{ url_for('article.detail', article_id=article.id) }}" class="text-decoration-none text-dark fw-medium">
+                                                            {{ article.title }}
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-muted small">{{ article.created_at.strftime('%Y-%m-%d') }}</td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border me-1"><i class="bi bi-eye"></i> {{ article.view_count }}</span>
+                                                        <span class="badge bg-light text-dark border"><i class="bi bi-heart"></i> {{ article.like_count }}</span>
+                                                    </td>
+                                                    <td class="text-end pe-3">
+                                                        <a href="{{ url_for('article.edit', article_id=article.id) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">
+                                                            <i class="bi bi-pencil"></i> 编辑
+                                                        </a>
+                                                        <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteArticle({{ article.id }})">
+                                                            <i class="bi bi-trash"></i> 删除
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-5">
+                                                        <i class="bi bi-journal-text text-light" style="font-size: 3rem;"></i>
+                                                        <p class="text-muted mt-3">您还没有发布过文章</p>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Avatar Modal -->
+<div class="modal fade" id="uploadAvatarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">更换头像</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('user.upload_avatar') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-4">
+                        <img id="avatarPreview" src="{{ current_user.avatar }}" class="rounded-circle border shadow-sm" style="width: 150px; height: 150px; object-fit: cover;">
+                    </div>
+                    <div class="mb-3">
+                        <input class="form-control" type="file" name="avatar" id="avatarInput" accept="image/*" required onchange="previewImage(this)">
+                        <div class="form-text mt-2">支持 JPG, PNG, WebP 格式，最大不超过 2MB</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">上传头像</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function deleteArticle(articleId) {
+    if (confirm('确认要删除这篇文章吗？此操作不可撤销。')) {
+        fetch(`/article/delete/${articleId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 200) {
+                const row = document.getElementById(`article-row-${articleId}`);
+                if (row) {
+                    row.remove();
+                } else {
+                     location.reload();
+                }
+            } else {
+                alert(data.msg);
+            }
+        });
+    }
+}
+</script>
+
+{% endblock %}

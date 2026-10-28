@@ -1,0 +1,70 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ '编辑文章' if article else '发布文章' }} - 知识分享平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title mb-4">{{ '编辑文章' if article else '撰写新文章' }}</h2>
+                
+                <form action="{{ url_for('article.edit', article_id=article.id) if article else url_for('article.publish') }}" 
+                      method="POST" enctype="multipart/form-data">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-bold">标题</label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" 
+                               value="{{ article.title if article else '' }}" required placeholder="请输入文章标题">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="category_id" class="form-label fw-bold">选择分类</label>
+                            <select class="form-select" id="category_id" name="category_id">
+                                <option value="">未分类</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {{ 'selected' if article and article.category_id == cat.id else '' }}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tags" class="form-label fw-bold">标签</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   value="{{ tags_str if tags_str else '' }}" placeholder="用英文逗号分隔，如：Python, Flask">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cover_image" class="form-label fw-bold">封面图片</label>
+                        <input type="file" class="form-control" id="cover_image" name="cover_image">
+                        {% if article and article.cover_image %}
+                        <div class="mt-2">
+                            <img src="{{ article.cover_image }}" alt="当前封面" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="summary" class="form-label fw-bold">摘要 (可选)</label>
+                        <textarea class="form-control" id="summary" name="summary" rows="2" placeholder="简要介绍文章内容">{{ article.summary if article else '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="content" class="form-label fw-bold">正文内容</label>
+                        <textarea class="form-control" id="content" name="content" rows="15" required placeholder="支持 Markdown 或 纯文本">{{ article.content if article else '' }}</textarea>
+                        <div class="form-text mt-2 text-muted">提示：系统目前支持 Markdown 语法。</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-light px-4">取消</a>
+                        <button type="submit" class="btn btn-primary px-5">{{ '保存更新' if article else '立即发布' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

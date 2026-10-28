@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}登录 - 知识分享平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm mt-5">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">欢迎回来</h2>
+                <form action="{{ url_for('auth.login') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2">登录</button>
+                    </div>
+                </form>
+                <div class="mt-4 text-center">
+                    <span class="text-muted">还没有账号？</span>
+                    <a href="{{ url_for('auth.register') }}" class="text-decoration-none">立即注册</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

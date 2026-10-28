@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">用户管理</h1>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th>ID</th>
+                    <th>头像</th>
+                    <th>用户名</th>
+                    <th>昵称</th>
+                    <th>角色</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>
+                        <img src="{{ user.avatar or '/static/images/default_avatar.png' }}" class="rounded-circle" width="32" height="32" alt="">
+                    </td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.nickname or '-' }}</td>
+                    <td>
+                        <span class="badge {{ 'bg-danger' if user.role == 'admin' else 'bg-secondary' }}">
+                            {{ '管理员' if user.role == 'admin' else '普通用户' }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if user.id != current_user.id %}
+                        <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                        {% else %}
+                        <span class="text-muted small">无法操作自己</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteUser(userId, username) {
+    if (confirm('确定要删除用户 "' + username + '" 吗？此操作将同时删除该用户的所有文章和互动记录！')) {
+        fetch('/admin/user/delete/' + userId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 200) {
+                alert(data.msg);
+                location.reload();
+            } else {
+                alert(data.msg);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
